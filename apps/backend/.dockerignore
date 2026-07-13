@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Secrets / local env — mounted at runtime, never baked into the image
+.env
+.env.*
+service-account.json
+credentials/
+*.key
+*.pem
+
+# Tests & dev cruft (not needed in the runtime image)
+tests/
+.git/
+.gitignore
+*.md
