@@ -1,0 +1,75 @@
+# Production stack — backend + frontend.
+#
+# Traefik is NOT part of this repo: it runs once on the host as the shared edge
+# proxy (see /var/www/MyProjects/traefik/). This stack's public containers join
+# the shared external `web` network so Traefik can route to them; backend-private
+# traffic uses the `applyai-internal` network.
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+name: applyai
+
+services:
+  backend:
+    build:
+      context: ../../apps/backend
+      dockerfile: Dockerfile
+    image: applyai-backend:latest
+    container_name: applyai-backend
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    environment:
+      APP_ENV: production
+      ALLOWED_ORIGINS: "https://${FRONTEND_DOMAIN}"
+      TRUSTED_HOSTS: "${BACKEND_DOMAIN}"
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/service-account.json
+    volumes:
+      - ../../apps/backend/service-account.json:/run/secrets/service-account.json:ro
+    networks:
+      - web
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${BACKEND_DOMAIN}`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=8001"
+      # Per-source-IP rate limit (defense against unauthenticated floods — the
+      # app's own limiter only kicks in after auth).
+      - "traefik.http.middlewares.backend-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.backend-ratelimit.ratelimit.burst=50"
+      - "traefik.http.routers.backend.middlewares=backend-ratelimit"
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: "https://${BACKEND_DOMAIN}"
+        NEXT_PUBLIC_FIREBASE_API_KEY: "${NEXT_PUBLIC_FIREBASE_API_KEY}"
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}"
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: "${NEXT_PUBLIC_FIREBASE_PROJECT_ID}"
+        NEXT_PUBLIC_FIREBASE_APP_ID: "${NEXT_PUBLIC_FIREBASE_APP_ID}"
+    image: applyai-frontend:latest
+    container_name: applyai-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${FRONTEND_DOMAIN}`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+
+networks:
+  # Shared edge network — created once on the host (`docker network create web`)
+  # and joined by Traefik + every project's public containers. External so no
+  # single project owns it.
+  web:
+    external: true
+  # Private to this stack (backend <-> internal services). Named explicitly so
+  # it's unambiguous which project owns it.
+  internal:
+    name: applyai-internal

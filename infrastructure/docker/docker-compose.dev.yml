@@ -1,0 +1,44 @@
+# Local dev stack — hot reload, no Traefik, ports published directly.
+#   docker compose -f docker-compose.dev.yml up --build
+# backend: http://localhost:8001   frontend: http://localhost:3000
+
+name: applyai-dev
+
+services:
+  backend:
+    build:
+      context: ../../apps/backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: applyai-backend-dev
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    env_file:
+      - path: ../../apps/backend/.env
+        required: false
+    volumes:
+      - ../../apps/backend:/app
+      - /app/.venv          # keep the image's venv under the bind mount
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: apps/frontend/Dockerfile
+      target: deps          # stop after npm ci; source comes from the mount
+    container_name: applyai-frontend-dev
+    restart: unless-stopped
+    working_dir: /repo
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: ../../apps/frontend/.env.local
+        required: false
+    volumes:
+      - ../..:/repo
+      - /repo/node_modules
+      - /repo/apps/frontend/.next
+    depends_on:
+      - backend
+    command: npm run dev --workspace=applyai-frontend

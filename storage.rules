@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// ApplyAI Cloud Storage rules.
+//
+// All resume/pipeline artifacts are served to the browser via short-lived
+// signed URLs minted by the backend. Clients never touch Storage directly, so
+// deny all client access here. (Signed URLs are authorized out-of-band and are
+// unaffected by these rules.)
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

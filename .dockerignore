@@ -1,0 +1,38 @@
+# Root .dockerignore — applies to builds whose context is the repo root
+# (the frontend image). Keeps the build context small and free of secrets.
+
+# Dependencies / build output
+**/node_modules
+**/.next
+**/out
+**/dist
+**/.turbo
+
+# Python (the backend has its own apps/backend/.dockerignore for its own context)
+**/__pycache__
+**/*.pyc
+**/.venv
+**/.pytest_cache
+**/.ruff_cache
+
+# Secrets & local env
+**/.env
+**/.env.*
+**/service-account.json
+**/credentials
+*.key
+*.pem
+
+# VCS / tooling / editor
+.git
+.gitignore
+.github
+.claude
+**/*.log
+.DS_Store
+
+# Infra & docs aren't needed inside app images
+infrastructure
+design
+scripts
+**/*.md

@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// ApplyAI Firestore security rules.
+//
+// The frontend reads `pipelines/{id}` and `resumes/{id}` directly via the
+// client SDK (onSnapshot for live progress). These rules are the ONLY thing
+// enforcing ownership on that path — the FastAPI backend's ownership checks do
+// not apply to direct client reads. All writes go through the backend service
+// account, which bypasses these rules, so clients are never allowed to write.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner() {
+      return request.auth != null
+        && resource.data.user_id == request.auth.uid;
+    }
+
+    match /pipelines/{id} {
+      allow read: if isOwner();
+      allow write: if false;   // backend service account only
+    }
+
+    match /resumes/{id} {
+      allow read: if isOwner();
+      allow write: if false;   // backend service account only
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

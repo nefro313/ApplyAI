@@ -1,0 +1,14 @@
+{
+  "name": "applyai",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "frontend:dev": "npm run dev --workspace=applyai-frontend",
+    "frontend:build": "npm run build --workspace=applyai-frontend",
+    "frontend:typecheck": "npm run typecheck --workspace=applyai-frontend"
+  }
+}
