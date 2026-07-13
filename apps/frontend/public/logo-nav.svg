@@ -1,0 +1,22 @@
+<svg width="160" height="40" viewBox="0 0 160 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon background -->
+  <rect x="0" y="4" width="32" height="32" rx="8" fill="#6C5CE7"/>
+
+  <!-- Resume doc -->
+  <rect x="8" y="9" width="12" height="16" rx="2" fill="white"/>
+  <line x1="10" y1="14" x2="18" y2="14" stroke="#A99FF5" stroke-width="1" stroke-linecap="round"/>
+  <line x1="10" y1="17" x2="18" y2="17" stroke="#A99FF5" stroke-width="1" stroke-linecap="round"/>
+  <line x1="10" y1="20" x2="15" y2="20" stroke="#A99FF5" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- AI check badge -->
+  <circle cx="22" cy="23" r="5.5" fill="#5A4BD1"/>
+  <path d="M19.5 23 L21.5 25 L25.5 20.5" stroke="#FFD166" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Gold spark -->
+  <circle cx="26" cy="10" r="2" fill="#FFD166"/>
+  <path d="M24.5 10 L22.5 12.5" stroke="#FFD166" stroke-width="1" fill="none" stroke-linecap="round"/>
+
+  <!-- Wordmark -->
+  <text x="40" y="25" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="600" font-size="18" fill="#1A1440" letter-spacing="-0.4">Apply</text>
+  <text x="97" y="25" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="700" font-size="18" fill="#6C5CE7" letter-spacing="-0.4">AI</text>
+</svg>

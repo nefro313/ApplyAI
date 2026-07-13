@@ -1,0 +1,9 @@
+# Frontend builds use the repo-root context, so the root /.dockerignore applies.
+# This file matters only if the context is ever narrowed to apps/frontend.
+node_modules
+.next
+out
+.env
+.env.*
+.git
+*.log
