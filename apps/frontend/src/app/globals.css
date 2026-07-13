@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Font-family tokens, fed by the self-hosted @fontsource faces imported in
+     layout.tsx. Tailwind's fontFamily config reads these via var(--font-*). */
+  :root {
+    --font-sans: "Inter Variable";
+    --font-display: "Sora Variable";
+    --font-mono: "JetBrains Mono Variable";
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Body color is driven by the `light` / `dark` class on <html>, which the
+     inline theme-init script sets before first paint (defaults to `light`).
+     transition-colors makes the toggle feel smooth. */
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans transition-colors duration-500;
+  }
+  html.dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+  /* Headings pick up the display face (Sora) project-wide with a touch of
+     negative tracking so large type reads tight and intentional. */
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer utilities {
+  /* Opt a subtree back to the OS-native system font (the look /home had before
+     the Inter + Sora type system landed). Also targets headings inside it, so
+     the global h1/h2/h3 → Sora rule doesn't leak through. */
+  .font-system,
+  .font-system :is(h1, h2, h3) {
+    font-family:
+      ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .glass {
+    @apply bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-white/60 dark:border-white/10 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.4),0_10px_28px_-12px_rgba(0,0,0,0.6)];
+  }
+  /* Frosted-glass treatment for input surfaces — translucent fill + blur over
+     whatever background sits behind (orb / dot grid). Designed to be merged
+     onto the base Input/Textarea classes via `cn`, so it overrides their solid
+     bg + border. Reads well in both themes. */
+  .glass-field {
+    @apply border-white/60 bg-white/40 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] focus:bg-white/60 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:focus:bg-white/[0.1];
+  }
+  .ring-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950;
+  }
+}
+
+/* ── /home aurora background ─────────────────────────────────────────────
+   Slow, GPU-friendly drift for the blurred aurora blooms behind the dot grid
+   on /home. translate3d keeps each blob on its own compositor layer (60fps);
+   the motion is small so it adds atmosphere without pulling focus. The centre
+   blob bakes its -50% x-offset into the keyframes since the transform here
+   overrides any positioning transform from utility classes. */
+@keyframes home-aurora-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(5%, -4%, 0) scale(1.12);
+  }
+}
+@keyframes home-aurora-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-6%, -3%, 0) scale(0.94);
+  }
+}
+@keyframes home-aurora-c {
+  0%,
+  100% {
+    transform: translate3d(-50%, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-50%, 5%, 0) scale(1.14);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-aurora] {
+    animation: none !important;
+  }
+}
+
+/* ── Landing entrance reveal ─────────────────────────────────────────────
+   Pure-CSS fade-up so hero content is visible on first paint without waiting
+   for React to hydrate (the heavy ogl/firebase bundles can delay hydration on
+   a cold load, which previously left the page blank). `fill-mode: both` holds
+   the 0% state through any stagger delay; reduced-motion users skip straight
+   to the final state. */
+@keyframes landing-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.landing-reveal {
+  animation: landing-reveal 0.5s ease-out both;
+}
+
+/* ── Showcase marquee ────────────────────────────────────────────────────
+   Continuous horizontal scroll. The track renders the chip list twice; moving
+   it by -50% lands the second copy exactly where the first began, so the loop
+   is seamless. Pause on hover so users can read / click a card. */
+@keyframes showcase-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.showcase-marquee {
+  animation: showcase-marquee var(--marquee-duration, 40s) linear infinite;
+  width: max-content;
+}
+.showcase-marquee:hover {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-reveal {
+    animation: none;
+  }
+  .showcase-marquee {
+    animation: none;
+  }
+}
+
+/* ── Theme-switch circular reveal ────────────────────────────────────────
+   Drives the View Transitions API swap in theme-context. We disable the
+   browser's default crossfade and stack the new snapshot above the old one,
+   so the JS-driven clip-path circle wipes the new theme in from the toggle. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 2147483646;
+}
